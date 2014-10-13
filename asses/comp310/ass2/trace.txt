@@ -1,0 +1,29 @@
+No request in buffer, Printer 1 sleeps
+No request in buffer, Printer 2 sleeps
+Client 1 has 8 pages to print, puts request in Buffer[1]
+Client 2 has 10 pages to print, puts request in Buffer[2]
+Client 3 has 4 pages to print, buffer full, sleeps
+Printer 1 starts printing 8 pages from Buffer[1]
+Printer 2 starts printing 10 pages from Buffer[2]
+Client 3 wakes up, put request in Buffer[0]
+Client 1 has 9 pages to print, puts request in Buffer[1]
+Client 2 has 1 pages to print, puts request in Buffer[2]
+Client 3 has 3 pages to print, puts request in Buffer[0]
+Printer 1 finished printing 8 pages from Buffer[1]
+Printer 1 starts printing 3 pages from Buffer[0]
+Printer 2 finished printing 10 pages from Buffer[2]
+No request in buffer, Printer 2 sleeps
+Printer 2 starts printing 1 pages from Buffer[1]
+Client 1 has 5 pages to print, buffer full, sleeps
+Client 1 wakes up, put request in Buffer[1]
+Client 3 has 9 pages to print, puts request in Buffer[2]
+Client 2 has 4 pages to print, puts request in Buffer[0]
+Printer 2 finished printing 1 pages from Buffer[1]
+Printer 1 finished printing 3 pages from Buffer[0]
+Printer 2 starts printing 9 pages from Buffer[2]
+Printer 1 starts printing 4 pages from Buffer[0]
+Client 1 has 10 pages to print, puts request in Buffer[1]
+Client 2 has 1 pages to print, puts request in Buffer[2]
+Client 3 has 1 pages to print, puts request in Buffer[2]
+Printer 1 finished printing 4 pages from Buffer[0]
+Printer 1 starts printing 10 pages from Buffer[1]

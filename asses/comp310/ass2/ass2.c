@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <semaphore.h>
 #include <pthread.h>
 
 #define TRUE 1
@@ -13,10 +14,9 @@
 
 typedef int bufferItem;
 
-pthread_mutex_t mutex;
-
-pthread_cond_t empty = PTHREAD_COND_INITIALIZER;
-pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
+sem_t mutex;
+sem_t full;
+sem_t empty;
 
 bufferItem *buffer;
 int bufferSize;
@@ -43,32 +43,38 @@ int main(int argc, const char *argv[]){
     int numPrinters = atoi(argv[2]);
     bufferSize = atoi(argv[3]);
 
+    //Init the semaphores
+    sem_init(&mutex, 0, 1);
+    sem_init(&full, 0, 0);
+    sem_init(&empty, 0, bufferSize);
+
     buffer = (int*) malloc(bufferSize * sizeof(bufferItem));
     if (buffer == NULL){
         printf("Error allocating memory to the buffer\n");
         return -1;
     }
 
-    //Init the sync structures
-    pthread_mutex_init(&mutex, NULL);
+    //Init the thread Atributes
     pthread_attr_init(&tAttr);
 
     //Create Printer threads
-    for(int i = 0; i < numPrinters; i++){
-        pthread_create(&tId, &tAttr, printer, (void *) &i);
+    pthread_t printerThread[numPrinters];
+    for(int i = 1; i <= numPrinters; ++i){
+        pthread_create(&printerThread[i - 1], 0, printer, (void *) i);
     }
 
-    //Create Client threadsß
-    for(int i = 0; i < numClients; i++){
-        pthread_create(&tId, &tAttr, client, (void *) &i);
+    //Create Client threads
+    pthread_t clientThread[numClients];
+    for(int i = 1; i <= numClients; ++i){
+        pthread_create(&clientThread[i - 1], 0, client, (void *)i);
     }
 
-    sleep(120);
+    sleep(20);
     return(0);
 }
 
 void *client(void *param){
-    int clientId = *((int*)param);
+    int clientId = (int) param;
     int indexBuffer;
 
     bufferItem nextJob;
@@ -77,20 +83,21 @@ void *client(void *param){
         nextJob = rand() % 10 + 1;
 
         //Critical Section
-        pthread_mutex_lock(&mutex);
+        sem_wait(&mutex);
 
         if((in + 1) % bufferSize == out){
             printf("Client %d has %d pages to print, buffer full, sleeps\n", clientId, nextJob);
-            pthread_cond_wait(&empty, &mutex);
+            sem_wait(&empty);
             indexBuffer = insertJob(nextJob);
             printf("Client %d wakes up, put request in Buffer[%d]\n", clientId, indexBuffer);
         } else {
+            sem_wait(&empty);
             indexBuffer = insertJob(nextJob);
             printf("Client %d has %d pages to print, puts request in Buffer[%d]\n", clientId, nextJob, indexBuffer);
         }
 
-        pthread_cond_signal(&fill);
-        pthread_mutex_unlock(&mutex);
+        sem_post(&mutex);
+        sem_post(&full);
         //End Crictical section
 
         sleep(PRODUCTION_INTERVAL);
@@ -98,24 +105,24 @@ void *client(void *param){
 }
 
 void *printer(void *param){
-    int printerId = *((int*)param);
+    int printerId = (int) param;
     int indexBuffer;
 
     bufferItem nextJob;
 
     while(TRUE){
         //Critical Section
-        pthread_mutex_lock(&mutex);
+        sem_wait(&mutex);
 
         if(in == out){
             printf("No request in buffer, Printer %d sleeps\n", printerId);
-            pthread_cond_wait(&fill, &mutex);
+            sem_wait(&full);
         }
 
         indexBuffer = removeJob(&nextJob);
 
-        pthread_cond_signal(&empty);
-        pthread_mutex_unlock(&mutex);
+        sem_post(&mutex);
+        sem_post(&empty);
         //End Critical section
 
         printf("Printer %d starts printing %d pages from Buffer[%d]\n", printerId, nextJob, indexBuffer);
