@@ -1,3 +1,8 @@
+#The values:
+#Clients: 3
+#Printers: 2
+#Buffer: 2
+
 No request in buffer, Printer 1 sleeps
 No request in buffer, Printer 2 sleeps
 Client 1 has 8 pages to print, puts request in Buffer[1]
