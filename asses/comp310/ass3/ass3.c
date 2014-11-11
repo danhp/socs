@@ -6,12 +6,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <ucontext.h>
+#include <slack/list.h>
 
 #define TRUE 1
 #define FALSE 0
 #define THREAD_NAME_LEN 50
-#define LIST_LEN 5
 
 //Data Structures
 // Run Queue, Wait Queues
@@ -20,17 +21,25 @@
 void* stack;
 
 //Index each entry in an array.
-typedef struct _mythread_control_block{
+typedef struct mythread_control_block{
     ucontext_t context;
     char thread_name[THREAD_NAME_LEN];
     int thread_id;
 } mythread_control_block;
 
-typedef struct _semaphore{
-    int value;
-    // int id;
-    //list
+typedef struct semaphore{
+    int id;
+    int count;
+    struct semaphore *next;
+    struct listElement *nextElement;
 } semaphore;
+
+typedef struct list_element{
+    char thread_name[THREAD_NAME_LEN];
+    struct listElement *next;
+} list_element;
+
+semaphore *firstSemaphore = NULL;
 
 int mythread_init(){
 
@@ -41,7 +50,7 @@ int mythread_create(char *threadName, void (*threadfunc)(), int stacksize){
     //Allocate memory to the stack
     stack = malloc(stacksize);
     if (stack == 0){
-        perror("malloc: could not allocated the stack");
+        perror("malloc: could not allocate the stack");
         return -1;
     }
 
@@ -60,22 +69,55 @@ void set_quantum_size(int quantum){
 
 }
 
-int create_semaphore(int value){
+int create_semaphore(int semValue){
+    semaphore *s = firstSemaphore;
+    semaphore *newSemaphore = (semaphore*)malloc(sizeof(semaphore));
 
-    return 0;
+    //Init the new semaphore
+    newSemaphore->count = semValue;
+    newSemaphore->nextElement = NULL;
+
+    if (firstSemaphore == NULL){
+        firstSemaphore = newSemaphore;
+    } else {
+        while (s->next != NULL){
+            s = s->next;
+        }
+        newSemaphore->id = s->id + 1;
+        s->next = newSemaphore;
+    }
+
+    return newSemaphore->id;
 }
 
-//Implemented with a semaphore table or a linked list.
-void semaphore_wait(int semaphore){
+void semaphore_wait(int semId){
 
 }
 
-void semaphore_signal(int semaphore){
+void semaphore_signal(int semId){
 
 }
 
-void destroy_semaphore(int semaphore){
+void destroy_semaphore(int semId){
+    semaphore *currentSem = firstSemaphore;
+    semaphore *previousSem = NULL;
 
+    while (currentSem != NULL){
+        if (currentSem->id == semId){
+            break;
+        } else {
+            previousSem = currentSem;
+            currentSem = currentSem->next;
+        }
+    }
+
+    if (previousSem != NULL){
+        previousSem->next = currentSem->next;
+    } else {
+        firstSemaphore = currentSem->next;
+    }
+
+    free(currentSem);
 }
 
 void mythread_state(){
@@ -83,6 +125,6 @@ void mythread_state(){
 }
 
 int main(){
-
+    create_semaphore(3);
     return 0;
 }

@@ -11,7 +11,7 @@
 #define MAX_HISTORY 10
 /**
 * setup() reads in the next command line, separating it into distinct tokens
-* using whitespace as delimiters. setup() sets the args parameter as a 
+* using whitespace as delimiters. setup() sets the args parameter as a
 * null-terminated string.
 */
 char *history[MAX_HISTORY];
@@ -41,7 +41,6 @@ void addJob(char *command) {
     } else {
         while (j->next != NULL)
             j = j->next;
-        
         j->next = newJob;
     }
 }
@@ -50,7 +49,7 @@ void removeJob(pid_t pid){
     job *current = firstJob;
     job *previous = NULL;
     firstJob = NULL;
-    
+
     while (current != NULL){
         if (current->pid == pid){
             break;
@@ -59,13 +58,13 @@ void removeJob(pid_t pid){
             current = current->next;
         }
     }
-    
+
     if (previous != NULL){
         previous->next = current->next;
     } else {
         firstJob = current->next;
     }
-    
+
     free(current);
 }
 
@@ -76,12 +75,12 @@ int setup(char inputBuffer[], char *args[],int *background){
     ct;             /* index of where to place the next parameter into args[] */
 
     ct = 0;
-    
+
     //should be succes unless encounter error cases.
     int result = 1;
-    
+
 	/* read what the user enters on the command line */
-    length = read(STDIN_FILENO, inputBuffer, MAX_LINE); 
+    length = read(STDIN_FILENO, inputBuffer, MAX_LINE);
 
     start = -1;
     if (length == 0){
@@ -91,12 +90,12 @@ int setup(char inputBuffer[], char *args[],int *background){
         perror("error reading the command");
         exit(-1); /* terminate with error code of -1 */
     }
-        
+
     //Implement r
     if (strncmp("r", inputBuffer, 1) == 0){
         strsep(&inputBuffer, " ");
         char *letter = strsep(&inputBuffer, "\n");
-        int k = 0; 
+        int k = 0;
         for (k; k < MAX_HISTORY && (history[k] != NULL); k++){
             if (strncmp(letter, history[k], 1) == 0){
                 printf(" >Running: %s\n", history[k]);
@@ -108,12 +107,12 @@ int setup(char inputBuffer[], char *args[],int *background){
         //No matching history found.
         if (k > MAX_HISTORY || history[k] == NULL){
             printf("No Match\n");
-            
+
             fflush(stdout);
             return 0;
         }
     }
-    
+
     //Implements history
     if (strncmp("history", inputBuffer, 7) == 0){
         result = 0;
@@ -151,7 +150,7 @@ int setup(char inputBuffer[], char *args[],int *background){
 
     /* examine every character in the inputBuffer */
     length = strlen(inputBuffer);
-    for (i=0; i < length; i++) { 
+    for (i=0; i < length; i++) {
         switch (inputBuffer[i]){
             case ' ':
                 //Do nothing
@@ -165,7 +164,7 @@ int setup(char inputBuffer[], char *args[],int *background){
                 break;
             case '\n':                   /* should be the final char examined */
                 if (start != -1){
-                    args[ct] = &inputBuffer[start]; 
+                    args[ct] = &inputBuffer[start];
                     ct++;
                 }
                 inputBuffer[i] = '\0';
@@ -180,7 +179,7 @@ int setup(char inputBuffer[], char *args[],int *background){
                     start = -1;
                 }
         }
-    } 
+    }
     args[ct] = NULL;                   /* in case the input line was > 80 */
     return result;
 
@@ -192,18 +191,18 @@ int main(void){
     int status;
     int builtIn;
     int success;
- 
+
     while (1){                          /* Program terminates normally inside setup */
         background = 0;
         status = 0;
         printf("COMMAND-> ");
         fflush(stdout);
-        
+
         success = setup(inputBuffer,args,&background);
         if (!success){
             continue;
         }
-        
+
         //Implements change directory
         if (strncmp("cd\0", inputBuffer, 3) == 0){;
             chdir(args[1]);
@@ -217,7 +216,7 @@ int main(void){
             printf("%s\n", cwd);
             continue;
         }
-            
+
         //Print jobs
         if (strncmp("jobs\0", inputBuffer, 6) == 0){
             if (firstJob == NULL) {
@@ -231,18 +230,18 @@ int main(void){
             }
             continue;
         }
-        
+
         if (strncmp("fg\0", inputBuffer, 3) == 0){
             if (args[1] == NULL) {
                 continue;
             }
-            
+
             pid_t jobPid = atoi(args[1]);
             waitpid(jobPid, &status, 0);
             removeJob(jobPid);
             continue;
         }
-        
+
         if (chpid = fork()){
             //parent process
             sleep(1);
