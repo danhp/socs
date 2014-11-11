@@ -1,17 +1,23 @@
+// User level threading library.
 // Written by Daniel Pham
 // 260 526 252
 
+#define _XOPEN_SOURCE 600
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <ucontext.h>
 
 #define TRUE 1
 #define FALSE 0
 #define THREAD_NAME_LEN 50
+#define LIST_LEN 5
 
 //Data Structures
 // Run Queue, Wait Queues
 // Control Block Table
 
+void* stack;
 
 //Index each entry in an array.
 typedef struct _mythread_control_block{
@@ -21,11 +27,10 @@ typedef struct _mythread_control_block{
 } mythread_control_block;
 
 typedef struct _semaphore{
-    int id;
+    int value;
+    // int id;
     //list
 } semaphore;
-
-void* stack;
 
 int mythread_init(){
 
@@ -33,6 +38,7 @@ int mythread_init(){
 }
 
 int mythread_create(char *threadName, void (*threadfunc)(), int stacksize){
+    //Allocate memory to the stack
     stack = malloc(stacksize);
     if (stack == 0){
         perror("malloc: could not allocated the stack");
