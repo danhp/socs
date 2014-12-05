@@ -6,6 +6,3 @@ int sfs_fwrite(int fileID, char *buf, int length);
 int sfs_fread(int fileID, char *buf, int length);
 int sfs_fseek(int fileID, int offset);
 int sfs_remove(char *file);
-
-
-
