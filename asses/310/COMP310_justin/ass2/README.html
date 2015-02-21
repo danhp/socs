@@ -1,0 +1,41 @@
+<meta charset="UTF-8">
+<link href="https://raw.github.com/justindomingue/markdown-css-themes/gh-pages/avenir-white.css" rel="stylesheet" type="text/css">
+<p>JUSTIN DOMINGUE - 260588454</p>
+
+<h2>COMP 310</h2>
+
+<h2>Assignment 2 - Memory Layout Printer</h2>
+
+<h3>Segment Sizes Found By My Program</h3>
+
+<pre><code>    SECTION           SIZE         ADDR
+    Stack          0x7feb2   0xbfa211b0
+    Heap        0x4c5df400    0x815a008
+    Memory Map  0x2f69ec8c   0xb7724000
+    .text            0xe66    0x8048000
+    .data           0x21de    0x8048e66
+    .bss              0x20    0x804b044
+</code></pre>
+
+<p><strong>Note.</strong> All sizes are in bytes. I tried to reproduce the layout of the output of the <code>size</code> command.</p>
+
+<h3>How To</h3>
+
+<p>Since <code>alloca</code>'s return value is implementation-dependent, I had to let the program crash (Segmentation Fault) once it can't allocate any more stack memory.</p>
+
+<p>A similar behavior was found for the <strong>memory map</strong>.</p>
+
+<p>For that reason, I decided to use switches to invoke different parts of the program.</p>
+
+<h4>Switches</h4>
+
+<ul>
+<li><code>-d</code> : Heap (dynamic) segment size</li>
+<li><code>-s</code> : Stack segment size</li>
+<li><code>-m</code> : Memory Map segment size</li>
+<li><code>-h</code> : Show the help</li>
+</ul>
+
+<p>Running the executable with a switch will run a particular portion of the code. For example, <code>-d</code> will find the heap segment size and exit after finding it. The program uses a log file (<code>size_log</code>) to log the values found a each execution.</p>
+
+<p><strong>Note.</strong> Calling the program <em>without</em> a switch will show the information on the file (loading the sizes and addresses from the log file).</p>

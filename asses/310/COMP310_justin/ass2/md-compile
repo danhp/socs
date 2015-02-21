@@ -1,0 +1,3 @@
+echo '<meta charset="UTF-8">' > README.html
+echo '<link href="https://raw.github.com/justindomingue/markdown-css-themes/gh-pages/avenir-white.css" rel="stylesheet" type="text/css">' >> README.html
+markdown README.md >> README.html

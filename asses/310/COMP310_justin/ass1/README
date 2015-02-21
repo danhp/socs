@@ -1,0 +1,45 @@
+JUSTIN DOMINGUE
+260588454
+
+SIMPLE C SHELL
+
+The code should execute properly. Every feature was implemented.
+
+- - - - - - - - - - HOW TO RUN  - - - - - - - - - -
+
+No options need to be given to the executable for the program to run. The program should work as stated in the assignment handout.
+
+- - - - - - - - - HISTORY FEATURE - - - - - - - - -
+
+The history feature was implemented according to the assignment requirements. 
+
+- r : runs the most recent command, if any;
+- r x : run the most recent command starting with x, if any.
+
+An error will only be detected when the process is launched in the foreground. When the child exits, waitpid() will save its exit status inside status. Checking for that value allow to detect erroneous commands. It is to be noted that the command is added to history __before__ checking for the status. For that reason, we must remove it if it is detected erroneous. A history_buffer (containing the oldest command) allows to restore the history array to its previous state (without the erroneous command, that is).
+
+IMPLEMENTATION
+
+The history is implemented using a 2D array. Element at index 0 is the most recent.
+
+- - - - - - - - - SIGNAL HANDLING  - - - - - - - - -
+
+As requested, <Control><C> is ignored. 
+
+<Control-Z> will send the currently running job to the background. <Control><Z> id handled using a signal-handling function.
+
+- A word on background and foreground
+
+Foreground is referring to a process that is currently running. The parent process has no control until the child exits. When a process is in the background, it is "stopped". It does not run. When the user brings it to the foreground, the process starts running.
+
+- - - - - - - - - BUILT-IN COMMANDS  - - - - - - - - -
+
+history : prints the 10 most recent commands with the right command number
+cd : change directory
+exit : exits the shell
+jobs : list all the processes in the background, along with their pids 
+fg : brings a job into the foreground
+
+JOB IMPLEMENTATION
+
+Jobs are implemented using a linked list of job structure. A job structure holds a pid and the command associated with the pid. When a new job is sent to the background, a structure is created for it and then added to the linked list. When the job is sent to the foreground, it is removed from the linked list.
