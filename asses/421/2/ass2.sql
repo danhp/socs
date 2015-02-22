@@ -8,9 +8,9 @@ CREATE TABLE Departments
 CREATE TABLE Employees
     (eid INTEGER NOT NULL UNIQUE,
     did INTEGER NOT NULL,
-    firstName CHAR(20),
-    lastName CHAR(20),
-    jotTitle CHAR(20),
+    firstName CHAR(15),
+    lastName CHAR(15),
+    jobTitle CHAR(15),
     startDate DATE,
     lastDate DATE,
     gender CHAR(1),
@@ -21,7 +21,7 @@ CREATE TABLE Employees
     city CHAR(20),
     medicareNumber INTEGER UNIQUE,
     PRIMARY KEY (eid),
-    FOREIGN KEY (did) REFERENCES Departments(did));
+    FOREIGN KEY (did) REFERENCES Departments(did) ON DELETE CASCADE);
 
 CREATE TABLE Patients
     (medicareNumber INTEGER NOT NULL UNIQUE,
@@ -39,14 +39,14 @@ CREATE TABLE Doctors
     specialty CHAR(15),
     visitFee INTEGER NOT NULL,
     PRIMARY KEY (eid, doctorId),
-    FOREIGN KEY (eid) REFERENCES Employees(eid));
+    FOREIGN KEY (eid) REFERENCES Employees(eid) ON DELETE CASCADE);
 
 CREATE TABLE Nurses
     (eid INTEGER NOT NULL UNIQUE,
     nurseId INTEGER NOT NULL UNIQUE,
     specialty CHAR(15),
     PRIMARY KEY (eid, nurseId),
-    FOREIGN KEY (eid) REFERENCES Employees(eid));
+    FOREIGN KEY (eid) REFERENCES Employees(eid) ON DELETE CASCADE);
 
 CREATE TABLE Admissions
     (dateAdmitted DATE NOT NULL,
@@ -55,8 +55,8 @@ CREATE TABLE Admissions
     reasonForAdmission CHAR(20),
     dateDischarged DATE,
     PRIMARY KEY (dateAdmitted, medicareNumber, doctorId),
-    FOREIGN KEY (doctorId) REFERENCES Doctors(doctorId),
-    FOREIGN KEY (medicareNumber) REFERENCES Patients(medicareNumber));
+    FOREIGN KEY (doctorId) REFERENCES Doctors(doctorId) ON DELETE CASCADE,
+    FOREIGN KEY (medicareNumber) REFERENCES Patients(medicareNumber) ON DELETE CASCADE);
 
 CREATE TABLE Visits
     (v_time TIME NOT NULL,
@@ -66,8 +66,8 @@ CREATE TABLE Visits
     diagnosis CHAR(15),
     medicalReport CHAR(30),
     PRIMARY KEY (v_time, v_date, medicareNumber, doctorId),
-    FOREIGN KEY (doctorId) REFERENCES Doctors(doctorId),
-    FOREIGN KEY (medicareNumber) REFERENCES Patients(medicareNumber));
+    FOREIGN KEY (doctorId) REFERENCES Doctors(doctorId) ON DELETE CASCADE,
+    FOREIGN KEY (medicareNumber) REFERENCES Patients(medicareNumber) ON DELETE CASCADE);
 
 
 INSERT INTO Departments VALUES(1, 'Emergencies', 4, 50);
@@ -149,39 +149,106 @@ INSERT INTO Admissions VALUES('2014-03-06', 119, 11, 'HIV', '2014-03-07');
 INSERT INTO Admissions VALUES('2014-03-05', 116, 11, 'HIV', '2014-03-08');
 INSERT INTO Admissions VALUES('2014-03-05', 111, 11, 'HIV', '2014-03-06');
 INSERT INTO Admissions VALUES('2014-03-05', 110, 10, 'HIV', '2014-03-06');
-INSERT INTO Admissions VALUES('2014-03-05', 110, 14, 'HIV', '2014-03-06');
-INSERT INTO Admissions VALUES('2014-03-05', 110, 13, 'Pregnancy', '2014-03-09');
+INSERT INTO Admissions VALUES('2014-03-07', 110, 14, 'HIV', '2014-03-08');
+INSERT INTO Admissions VALUES('2014-03-05', 100, 13, 'Accident', '2014-03-09');
 INSERT INTO Admissions VALUES('2014-02-03', 111, 13, 'Pregnancy', '2014-02-11');
 INSERT INTO Admissions VALUES('2011-01-05', 108, 13, 'Pregnancy', '2011-01-10');
-INSERT INTO Admissions VALUES('2014-09-05', 207, 13, 'Heart', '2014-09-10');
-INSERT INTO Admissions VALUES('2010-03-05', 209, 13, 'Heart', '2010-03-09');
+INSERT INTO Admissions VALUES('2014-09-05', 101, 13, 'Heart', '2014-09-10');
+INSERT INTO Admissions VALUES('2010-03-05', 101, 13, 'Heart', '2010-03-09');
 
 INSERT INTO Visits VALUES('14:00:00', '2013-01-11', 111, 11, 'Healthy', 'All is good');
-INSERT INTO Visits VALUES('14:20:00', '2013-01-11', 113, 11, 'Healthy', 'All is good');
-INSERT INTO Visits VALUES('14:40:00', '2013-01-11', 119, 11, 'Healthy', 'All is good');
+INSERT INTO Visits VALUES('14:20:00', '2013-01-11', 113, 11, 'HIV', 'Not too good');
+INSERT INTO Visits VALUES('14:40:00', '2013-01-11', 119, 11, 'HIV', 'Run blood test');
 INSERT INTO Visits VALUES('15:00:00', '2013-01-11', 116, 11, 'Healthy', 'All is good');
 INSERT INTO Visits VALUES('15:20:00', '2013-01-11', 200, 11, 'Cancer', 'X-ray not good');
+INSERT INTO Visits VALUES('11:00:00', '2011-02-28', 100, 13, 'Healthy', 'All is good');
+INSERT INTO Visits VALUES('11:00:00', '2013-02-10', 108, 11, 'Healthy', 'All is good');
+INSERT INTO Visits VALUES('11:00:00', '2014-02-12', 108, 12, 'Healthy', 'All is good');
+INSERT INTO Visits VALUES('11:00:00', '2015-02-20', 108, 13, 'Healthy', 'All is good');
+INSERT INTO Visits VALUES('11:00:00', '2015-02-11', 108, 14, 'Healthy', 'All is good');
 
-INSERT INTO Visits VALUES('11:00:00', '2011-02-28', 108, 10, 'Healthy', 'All is good');
-INSERT INTO Visits VALUES('11:00:00', '2011-02-10', 108, 11, 'Healthy', 'All is good');
-INSERT INTO Visits VALUES('11:00:00', '2011-02-12', 108, 12, 'Healthy', 'All is good');
-INSERT INTO Visits VALUES('11:00:00', '2011-02-20', 108, 13, 'Healthy', 'All is good');
-INSERT INTO Visits VALUES('11:00:00', '2011-02-11', 108, 14, 'Healthy', 'All is good');
+-- 1
+SELECT * FROM Employees INNER JOIN Doctors
+        ON Employees.eid=Doctors.eid
+    WHERE Doctors.specialty='Heart';
 
-SELECT * FROM Departments;
-SELECT * FROM Employees;
-SELECT * FROM Patients;
-SELECT * FROM Doctors;
-SELECT * FROM Nurses;
-SELECT * FROM Admissions;
-SELECT * FROM Visits;
+-- 2
+SELECT * FROM Employees INNER JOIN Nurses
+        ON Employees.eid=Nurses.eid
+    WHERE Employees.city='Laval' AND Employees.lastDate IS NULL AND Employees.startDate>'2012-06-01';
 
--- DELETE FROM Employees cascade;
--- DELETE FROM Patients cascade;
--- DELETE FROM Doctors cascade;
--- DELETE FROM Nurses cascade;
--- DELETE FROM Admissions cascade;
--- DELETE FROM Visits cascade;
--- DELETE FROM Departments cascade;
+-- 3
+SELECT medicalReport FROM Visits
+    WHERE Visits.medicareNumber=108;
+
+-- 4
+SELECT visitFee FROM Visits INNER JOIN Doctors
+        ON Visits.doctorId=Doctors.doctorId
+    WHERE Visits.medicareNumber=108 AND Visits.v_date>'2014-06-01'
+    ORDER BY v_date;
+-- 5
+SELECT Patients.medicareNumber, Patients.firstName, Patients.lastName
+    FROM (SELECT * FROM Admissions AS a WHERE a.reasonForAdmission='Heart') as hp INNER JOIN Patients ON Patients.medicareNumber=hp.medicareNumber
+    GROUP BY Patients.medicareNumber, Patients.firstName, Patients.lastName
+    HAVING count(*) >= 5;
+
+-- 6
+SELECT firstName, lastName, phone, dateAdmitted, dateDischarged FROM Patients INNER JOIN Admissions
+        ON Patients.medicareNumber=Admissions.medicareNumber
+    WHERE Admissions.reasonForAdmission='Cancer' OR Admissions.reasonForAdmission='HIV';
+
+-- 7
+SELECT Patients.firstName, Patients.lastName, Patients.phone, Admissions.dateAdmitted, Admissions.dateDischarged
+    FROM (
+        (Patients INNER JOIN Admissions
+            ON Patients.medicareNumber=Admissions.medicareNumber AND Admissions.reasonForAdmission='Cancer')
+        LEFT OUTER JOIN
+            (Patients AS Patients2 INNER JOIN Admissions AS Admissions2
+                ON Patients2.medicareNumber=Admissions2.medicareNumber AND Admissions2.reasonForAdmission='HIV')
+        ON Patients.medicareNumber=Patients2.medicareNumber)
+    WHERE Admissions2.reasonForAdmission IS NULL;
+
+-- 8
+SELECT Patients.firstName, Patients.lastName, Patients.phone, Admissions.dateAdmitted, Admissions.dateDischarged
+    FROM Patients
+    INNER JOIN Employees ON Patients.medicareNumber=Employees.medicareNumber
+    INNER JOIN Doctors ON Doctors.eid=Employees.eid
+    INNER JOIN Admissions ON Admissions.medicareNumber=Patients.MedicareNumber;
+
+-- 9
+SELECT p.firstName, p.lastName, p.phone
+    FROM Patients AS p
+    INNER JOIN Admissions AS a ON p.medicareNumber = a.medicareNumber
+    INNER JOIN Doctors AS d ON a.doctorId = d.doctorId
+    INNER JOIN Employees AS e ON e.eid=d.eid AND e.did=3
+    GROUP BY p.firstName, p.lastName, p.phone
+    HAVING count(DISTINCT a.doctorId) = (SELECT count(doctorId) FROM
+                                                (SELECT * FROM
+                                                    Doctors AS d INNER JOIN Employees AS E
+                                                    ON d.eid=e.eid WHERE e.did=3)as s);
+
+-- 10
+Select Patients.firstName, Patients.lastName, Employees.jobTitle, Employees.phone
+    FROM Patients
+    INNER JOIN Employees ON Patients.medicareNumber=Employees.medicareNumber
+    INNER JOIN Visits ON Patients.medicareNumber=Visits.medicareNumber
+    WHERE Visits.diagnosis='HIV';
+
+-- 11
+SELECT * FROM
+    Employees INNER JOIN
+    (SELECT * FROM Doctors WHERE visitFee=(select max(visitFee) from doctors)) AS d
+    ON Employees.eid=d.eid;
+
+-- 12
+
+
+DELETE FROM Departments;
+DELETE FROM Employees;
+DELETE FROM Patients;
+DELETE FROM Doctors;
+DELETE FROM Nurses;
+DELETE FROM Admissions;
+DELETE FROM Visits;
 
 DROP TABLE Departments, Employees, Patients, Admissions, Visits, Doctors, Nurses;
