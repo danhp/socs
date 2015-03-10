@@ -82,9 +82,9 @@ INSERT INTO Employees VALUES(4, 1, 'David', 'Fincher', 'Doctor', '1995-05-22', N
 INSERT INTO Employees VALUES(5, 3, 'Stanley', 'Kubrick', 'Doctor', '1980-05-23', NULL, 'M', NULL, '5550005555', NULL, NULL, 'Montreal', 104);
 INSERT INTO Employees VALUES(6, 4, 'Quentin', 'Tarentino', 'Doctor', '1994-09-10', NULL, 'M', NULL, '5550006666', NULL, NULL, 'Montreal', 105);
 
-INSERT INTO Doctors VALUES(1, 10, 'Neurology', 50);
+INSERT INTO Doctors VALUES(1, 10, 'Neurology', 40);
 INSERT INTO Doctors VALUES(2, 11, 'Heart', 30);
-INSERT INTO Doctors VALUES(3, 12, 'Heart', 30);
+INSERT INTO Doctors VALUES(3, 12, 'Heart', 60);
 INSERT INTO Doctors VALUES(4, 13, 'ER', 70);
 INSERT INTO Doctors VALUES(5, 14, 'Neurology', 50);
 INSERT INTO Doctors VALUES(6, 15, 'Cancer', 100);
@@ -182,10 +182,11 @@ SELECT medicalReport FROM Visits
     WHERE Visits.medicareNumber=108;
 
 -- 4
-SELECT visitFee FROM Visits INNER JOIN Doctors
+SELECT visitFee, v_date FROM Visits INNER JOIN Doctors
         ON Visits.doctorId=Doctors.doctorId
     WHERE Visits.medicareNumber=108 AND Visits.v_date>'2014-06-01'
     ORDER BY v_date;
+
 -- 5
 SELECT Patients.medicareNumber, Patients.firstName, Patients.lastName
     FROM (SELECT * FROM Admissions AS a WHERE a.reasonForAdmission='Heart') as hp INNER JOIN Patients ON Patients.medicareNumber=hp.medicareNumber
@@ -193,9 +194,13 @@ SELECT Patients.medicareNumber, Patients.firstName, Patients.lastName
     HAVING count(*) >= 5;
 
 -- 6
-SELECT firstName, lastName, phone, dateAdmitted, dateDischarged FROM Patients INNER JOIN Admissions
-        ON Patients.medicareNumber=Admissions.medicareNumber
-    WHERE Admissions.reasonForAdmission='Cancer' OR Admissions.reasonForAdmission='HIV';
+SELECT P.firstName, P.lastName, P.phone, A.dateAdmitted, A.dateDischarged
+    FROM Patients AS P INNER JOIN Admissions AS a ON p.medicareNumber = a.medicareNumber
+    INNER JOIN (SELECT P.medicarenumber
+        FROM Patients AS P INNER JOIN Admissions AS a ON p.medicareNumber = a.medicareNumber
+        WHERE a.reasonForAdmission IN ('Cancer', 'HIV')
+        GROUP BY P.medicareNumber
+        HAVING COUNT(*) >= 2) AS CH ON p.medicareNumber = ch.medicareNumber ;
 
 -- 7
 SELECT Patients.firstName, Patients.lastName, Patients.phone, Admissions.dateAdmitted, Admissions.dateDischarged
@@ -241,6 +246,12 @@ SELECT * FROM
     ON Employees.eid=d.eid;
 
 -- 12
+SELECT departmentName, min(visitFee) AS minFee, max(visitFee) AS maxFee, ROUND(avg(visitFee), 2) AS avgFee
+    FROM Employees P
+    JOIN Doctors D1 ON P.eid = D1.eid
+    JOIN Departments D2 ON P.did = D2.did
+    GROUP BY departmentName
+    HAVING COUNT(*) >= 2;
 
 
 DELETE FROM Departments;
