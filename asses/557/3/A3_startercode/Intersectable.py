@@ -64,7 +64,7 @@ class Sphere:
       projectionPoint = ray.eyePoint + projectionVector
 
       # Sphere center is behind the eye
-      if  dotProduct < 0:
+      if  dotProduct < EPS_DISTANCE:
           norm = np.linalg.norm(eye2center)
           if norm >= self.radius + EPS_DISTANCE:
               # No intersection
@@ -74,8 +74,8 @@ class Sphere:
               d = math.sqrt(math.pow(self.radius, 2) - math.pow(np.linalg.norm(projectionPoint - self.center), 2))
               isect.t = d - np.linalg.norm(projectionPoint - ray.eyePoint)
               isect.p = ray.eyePoint + (ray.viewDirection * isect.t)
-              isect.n = isect.p - self.center
-              isect.n = isect.n / np.linalg.norm(isect.n)
+              isect.n = GT.normalize(isect.p - self.center)
+              isect.material = self.material
       else:
           if np.linalg.norm(self.center - projectionPoint) > self.radius + EPS_DISTANCE:
               return isect
@@ -88,8 +88,8 @@ class Sphere:
                   isect.t = np.linalg.norm(projectionPoint - ray.eyePoint) + d
 
               isect.p = ray.eyePoint + (ray.viewDirection * isect.t)
-              isect.n = isect.p - self.center
-              isect.n = isect.n / np.linalg.norm(isect.n)
+              isect.n = GT.normalize(isect.p - self.center)
+              isect.material = self.material
       # ===== END SOLUTION HERE =====
       return isect
 
@@ -151,7 +151,30 @@ class Plane:
     isect = IntersectionResult()
 
     global EPS_DISTANCE # use this for testing if a variable is close to 0
-    #TODO ===== BEGIN SOLUTION HERE =====
+    # ===== BEGIN SOLUTION HERE =====
+    dotProduct = np.dot(self.normal, ray.viewDirection)
+    dotProductO = np.dot([0.0, 0.0, 0.0] - ray.eyePoint, self.normal)
+
+    if np.fabs(dotProduct) <= EPS_DISTANCE:
+        return isect
+    else:
+        if np.fabs(dotProductO) <= EPS_DISTANCE:
+            return isect
+        else:
+            t = -(np.dot(ray.eyePoint, self.normal)) / np.dot(ray.viewDirection, self.normal)
+            if t <= EPS_DISTANCE:
+                return isect
+            else:
+                isect.t = t
+                isect.n = self.normal
+                isect.p = ray.eyePoint + (ray.viewDirection * isect.t)
+                if self.material2 is None:
+                    isect.material = self.material
+                else:
+                    if (isect.p[0] + isect.p[2]) % 2 <= 1:
+                        isect.material = self.material
+                    else:
+                        isect.material = self.material2
 
     # ===== END SOLUTION HERE =====
     return isect
@@ -199,11 +222,47 @@ class Box:
     # plane intersections.  The ray will pass through at least a set of parallel
     # planes. tmin is the last intersection of the first planes of each set, and
     # tmax is the first intersection of the last planes of each set.
-    tmax = np.inf
-    tmin = -np.inf
+    tnear = -np.inf
+    tfar = np.inf
 
-    #TODO ===== BEGIN SOLUTION HERE =====
+    # ===== BEGIN SOLUTION HERE =====
+    for n in range(3):
+        if np.fabs(ray.viewDirection[n]) <= EPS_DISTANCE:
+            if ray.eyePoint[n] <= self.minPoint[n] or ray.eyePoint[n] >= self.maxPoint[n]:
+                return isect
+        else:
+            t1 = (self.minPoint[n] - ray.eyePoint[n])/ray.viewDirection[n]
+            t2 = (self.maxPoint[n] - ray.eyePoint[n])/ray.viewDirection[n]
 
+            if t1 > t2:
+                temp = t1
+                t1 = t2
+                t2 = temp
+
+            d = -ray.viewDirection[n] / np.fabs(ray.viewDirection[n])
+            if t1 > tnear:
+                tnear = t1
+                a = [0,0,0]
+                if n == 0:
+                    a = [1,0,0]
+                    normal = [x * d for x in a]
+                elif n == 1:
+                    a = [0,1,0]
+                    normal = [x * d for x in a]
+                elif n ==2:
+                    a = [0,0,1]
+                    normal = [x * d for x in a]
+
+            if t2 < tfar:
+                tfar = t2
+
+            if tnear > tfar or tfar <= EPS_DISTANCE:
+                return isect
+
+    isect.p = ray.eyePoint + (ray.viewDirection * tnear)
+    isect.n = normal
+    isect.t = tnear
+    isect.material = self.material
     # ===== END SOLUTION HERE =====
     return isect
 
@@ -233,7 +292,7 @@ class SceneNode:
         self.M = Tform.getA()
 
     self.Minv = np.linalg.inv(self.M)
-    #print(self.M, self.Minv)
+    # print(self.M, self.Minv)
 
   def intersect(self, ray):
     '''
@@ -246,7 +305,24 @@ class SceneNode:
     isect = IntersectionResult()
 
     global EPS_DISTANCE # use this for testing if a variable is close to 0
-    #TODO ===== BEGIN SOLUTION HERE =====
+    # ===== BEGIN SOLUTION HERE =====
+    tEye = np.dot(np.append(ray.eyePoint, [1]), self.Minv)
+    tDir = np.dot(np.append(ray.viewDirection, [0]), self.Minv)
 
+    e = [tEye[0], tEye[1], tEye[2]]
+    d = [tDir[0], tDir[1], tDir[2]]
+
+    s = np.linalg.norm(GT.normalize(d) / np.linalg.norm(d))
+
+    newRay = Ray(e, GT.normalize(d))
+
+    for c in self.children:
+        i = c.intersect(newRay)
+        if i.t < isect.t:
+            isect = i
+
+    rp = np.dot(np.append(isect.p, [0]), self.M)
+    isect.p = [rp[0], rp[1], rp[2]]
+    isect.t = isect.t * s
     # ===== END SOLUTION HERE =====
     return isect
