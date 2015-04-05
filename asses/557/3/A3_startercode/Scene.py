@@ -1,10 +1,10 @@
 '''
 This file contains the Scene class which has the renderScene() method that
-needs to be implemented for the assignment. Look for the tags 
-#------ Implement <method-name> 
+needs to be implemented for the assignment. Look for the tags
+#------ Implement <method-name>
 to find the location where you need to add code.
 
-This file also contains a basic scene at the end of the file which gets 
+This file also contains a basic scene at the end of the file which gets
 rendered whenever this file is executed. When starting out you'd find it useful
 to simply execute this file. Once you're ready to try other scenes that are in
 the ./scenes/ folder you should use A3App.py (see the comments in that file).
@@ -21,29 +21,29 @@ import numpy as np
 
 class Scene:
   """
-    
+
   The scene class contains the renderer, the list of lights, the list of intersectable
   surfaces and a value for the ambient light.
-  
+
   The renderScene() method is called by the main() function after the scene has been
   properly initialized.
-  
+
   """
-    
+
   def __init__(self, render = Render()):
     self.render = render # The camera will be set by the parser.
     self.lights = [] #empty lists of lights, needs to be populated by the parser.
     self.surfaces = [] #empty list of surfaces, needs to be populated by the parser.
     self.ambient = np.array([0.1, 0.1, 0.1]) # scene ambient value can be overridden by the xml file spec
-  
+
   def set_params(self, params):
       self.ambient = np.array(params.get('ambient', self.ambient))
       # force scene ambient to have 3 values (some xmls have 4)
       self.ambient = self.ambient[:3]
-      
+
 #----- Implement create_ray
   def create_ray(self,row,col):
-      ''' 
+      '''
       Create ray (i.e. origin and direction) from a pixel specified by (row, col).
       The ray originates at the camera's eye and goes through the point in space
       that corresponds to the image pixel coordinate (row, col). Take a look at
@@ -53,20 +53,20 @@ class Scene:
       '''
       The ray origin is set in this starter code. You need to compute and set
       the ray.viewDirection variable inside the solution block below.
-      Note: GeomTransform.py implements a function called normalize for 
-      normalizing vectors (with appropriate check for division by zero). 
+      Note: GeomTransform.py implements a function called normalize for
+      normalizing vectors (with appropriate check for division by zero).
       For a vector v, you can get the normalized vector as:
       normalized_v = GT.normalize(v)
       '''
       cam = self.render.camera # use a local variable to save some typing
       ray.eyePoint = cam.pointFrom # origin of the ray
-      
+
       #TODO ====== BEGIN SOLUTION ======
 
       # ===== END SOLUTION =====
-      return ray    
+      return ray
 
-#----- Implement blinn_phong_shading      
+#----- Implement blinn_phong_shading
   def blinn_phong_shading_per_light(self,viewer_direction,light,isect):
       '''
       Compute the color of the pixel for the given light source, viewer direction
@@ -76,7 +76,7 @@ class Scene:
       isect: is of type IntersectionResult that contains the intersection point,
              normal and material.
       '''
-      
+
       # Compute the color only for this instance. The caller is responsible for
       # mixing colors for different lights.
       color = np.array([0., 0., 0.])
@@ -87,32 +87,32 @@ class Scene:
 
 #----- Implement get_nearest_object_intersection
   def get_nearest_object_intersection(self,ray):
-      ''' 
+      '''
       Find the nearest object that the ray intersects and return the result of
       the intersection. Scene.surfaces contain a list of surfaces. A surface
       can be any of the type specified in Intersectable.py. More specifically
       they are Sphere, Plane, Box, and SceneNode.
       The result of the intersection should be returned in a variable of type
       IntersectionResult() which is defined in Ray.py file. IntersectionResult
-      contains the point of intersection (p), the surface normal (n) at the 
-      intersection point, material at the intersection point (material) and 
+      contains the point of intersection (p), the surface normal (n) at the
+      intersection point, material at the intersection point (material) and
       distance (t) of the intersection point from the ray origin (i.e. ray.eyePoint)
       '''
       # Here we initialize the variable that should be computed and returned
       # Note that by default nearest_intersection.t = inf which corresponds to no intersection
-      nearest_intersection = IntersectionResult() 
+      nearest_intersection = IntersectionResult()
       #TODO ======= BEGIN SOLUTION =========
 
       #======= END SOLUTION ========
-      #at this point nearest_intersection should contain 
+      #at this point nearest_intersection should contain
       #the updated values corresponding to the nearest intersection point.
       #If there was no intersection then it should have the same initial values.
-      return nearest_intersection 
+      return nearest_intersection
 
-#----- Implement get_visible_lights  
+#----- Implement get_visible_lights
   def get_visible_lights(self, isect):
-      ''' 
-      isect is variable of type IntersectionResult. isect.p contains the 
+      '''
+      isect is variable of type IntersectionResult. isect.p contains the
       intersection point. This function should return a python list containing
       all the lights that are "visible" from isect.p position. A light source
       is visible if there are no objects between the point and the light source.
@@ -121,7 +121,7 @@ class Scene:
       (accessed using self.lights). Your returned list should be a subset
       of self.lights
       '''
-     
+
       #you need to loop over the lights and return those that are visible from the position in result
       visibleLights = []
       #TODO ====== BEGIN SOLUTION =====
@@ -131,7 +131,7 @@ class Scene:
 
   def renderScene(self):
     """
-    
+
     The method renderScene is called once to draw all the pixels of the scene.  For each
     pixel, a ray is cast from the eye position through the location of the pixel on the
     near plane of the frustrum. The closest intersection is then computed by intersecting
@@ -139,24 +139,24 @@ class Scene:
     casted towards all the lights of the scene.  Based on if the point is exposed to the
     light, the shadow and the diffuse and specular lighting contributions can be computed
     and summed up for all lights.
-    
+
     """
-    
+
     # Initialize the renderer.
     self.render.init(self.render.camera.imageWidth, self.render.camera.imageHeight)
-    
+
     for pixel in self.render.getPixel():
         '''
-        pixel is a list containing the image coordinate of a pixel i.e. 
-        pixel = [col, row] 
+        pixel is a list containing the image coordinate of a pixel i.e.
+        pixel = [col, row]
         '''
-       
+
         # create a ray from the eye position and goes through the pixel
         ray = self.create_ray(pixel[1], pixel[0])
-        
+
         # set the default color to the background color
         color = self.render.bgcolor
-        
+
         nearest_isect = self.get_nearest_object_intersection(ray)
 
         if nearest_isect.is_valid_intersection(): # valid intersection
@@ -171,12 +171,12 @@ class Scene:
                 '''
                 for light in visible_lights:
                     color += self.blinn_phong_shading_per_light(-ray.viewDirection, light, nearest_isect)
-        
+
         #At this point color should be a floating-point numpy array of 3 elements
         #and is the final color of the pixel.
         self.render.setPixel(pixel, color)
-        
-    self.render.save()  
+
+    self.render.save()
 
 #############################################################################
 '''
@@ -188,20 +188,20 @@ Also see the README file.
 '''
 def test_red_sphere_blue_background():
     from Intersectable import Sphere
-    
+
     scene = Scene()
-    
+
     #Materials
     red = Material()
-    
+
     #Lights
     light = Light({'color':[0.8, 0.2, 0.2], 'from':[0, 0, 10], 'power':0.6})
     scene.lights.append(light)
-  
+
     #Surfaces
     sphere = Sphere({'radius':1, 'center':[0, 0, 0], 'material':red})
     scene.surfaces.append(sphere)
-  
+
     #Camera
     camera = Camera({'from':[0,0,4], 'to':[0,0,0], 'up':[0,1,0], 'fov':45, 'width':160, 'height':120})
     render = Render({'camera':camera, 'bgcolor': [.2, .2, .8], 'output':'red_sphere_blue_background.png'})
@@ -210,4 +210,3 @@ def test_red_sphere_blue_background():
 
 if __name__ == '__main__':
     test_red_sphere_blue_background()
-    
