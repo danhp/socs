@@ -4,8 +4,6 @@ Volume Rendering
 
 Note: It's necessary to use GL_CLAMP_TO_BORDER for 3D texture parameter.
 Because otherwise negative texture coordinates or coordinates greater than 1 can be generated.
-
-
 """
 from __future__ import division
 from OpenGL.GL import *
@@ -39,9 +37,8 @@ def display_histogram(data, nbins = 64):
     plt.show(False) # setting the argument to False should make the figure non-blocking
 
 class VolumeRendering(Model):
-    """
-    Scene class only deals with models in the scene.
-    """
+    # Scene class only deals with models in the scene.
+
     # the number of slices in the volume
     NUMSLICES = 300
 
@@ -55,9 +52,9 @@ class VolumeRendering(Model):
         self.intensity_stack = LD.load_tif_seq_data_UNC('./cthead-8bit/')
 
         # self.im_seq saves a copy of the RGBA-converted images
-        #np.tile will repeat the stack of 2D images along the 4th dimension.
-        #Since intensity_stack is 3D (N-2D images), np.newaxis will add a 4th dimension
-        #and (1, 1, 1, 4) means the first three dimensions are repeated once and the 4th dimension 4 times.
+        # np.tile will repeat the stack of 2D images along the 4th dimension.
+        # Since intensity_stack is 3D (N-2D images), np.newaxis will add a 4th dimension
+        # and (1, 1, 1, 4) means the first three dimensions are repeated once and the 4th dimension 4 times.
         self.im_seq = np.tile(self.intensity_stack[:,:,:,np.newaxis], (1, 1, 1, 4))
         self.im_seq[:,:,:,3] = 255 # set the alpha channel to completely opaque
 
@@ -73,7 +70,6 @@ class VolumeRendering(Model):
 
     def init(self):
         # Add any OpenGL related initialization here before Model.init
-        # ...
 
         Model.init(self)
         # initialize the texture
@@ -81,15 +77,14 @@ class VolumeRendering(Model):
         self.texID = glGenTextures(1)
 
         # apply default transfer function
-        self.transfer_func(0)
+        self.transfer_func(3)
 
     def build_texture(self):
-
         WIDTH = self.texels[0].shape[1]
         HEIGHT = self.texels[0].shape[0]
         DEPTH = self.texels.shape[0]
 
-          # tell OpenGL we're going to be setting up the texture id it gave us
+        # tell OpenGL we're going to be setting up the texture id it gave us
         glBindTexture(GL_TEXTURE_3D, self.texID)
         # when this texture needs to be shrunk to fit on small polygons, use linear interpolation of the texels to determine the color
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -110,48 +105,45 @@ class VolumeRendering(Model):
         self.window_texture_flag[window_id] = None # default no update required
 
     def transfer_func(self, flag):
-
         # refresh copy of the RGBA image to create texels using a transfer function
          self.texels = np.copy(self.im_seq)
 
          # iterate over frames in self.texels to set transfer function
          for frameNo in range(self.texels.shape[0]):
-
-             '''
-             The following can be used when designing transfer functions to check the image intensities:
-
-             intensities = self.intensity_stack[frameNo,:,:]
-
-             intensities contains the intensity values of each pixel of image frameNo.
-
-             See transfer function for flag == 1 below for an example on how to set RGBA values
-             using conditionals. This code runs faster than when using for loops.
-
-             '''
+             # The following can be used when designing transfer functions to check the image intensities:
+             # intensities = self.intensity_stack[frameNo,:,:]
+             # intensities contains the intensity values of each pixel of image frameNo.
+             # See transfer function for flag == 1 below for an example on how to set RGBA values
+             # using conditionals. This code runs faster than when using for loops.
 
              if flag == 0:
                  # default transfer function sets (r,g,b,a) = (255,255,255,255)
                  self.texels[frameNo, :, :, :] = [255, 255, 255, 255]
 
              elif flag == 1:
-                 ''' REPLACE THE FOLLOWING: transfer function 1 '''
-
+                 # ====== SKIN ======
                  intensities = self.intensity_stack[frameNo,:,:]
-                 self.texels[frameNo, (intensities>=10), :] = [255, 255, 255, 255]
-                 self.texels[frameNo, (intensities<10), :] = [255, 255, 255, 255]
+                 self.texels[frameNo, (intensities>=75), :] = [255, 223, 196, 255]
+                 self.texels[frameNo, (intensities<75), :] = [0, 0, 0, 0]
+                 # ====== END SOLUTION ======
 
              elif flag == 2:
-                 ''' TODO: transfer function 2 '''
-
+                 # ====== SKELETAL ======
+                 intensities = self.intensity_stack[frameNo,:,:]
+                 self.texels[frameNo, (intensities>=100), :] = [255, 215, 0, 255]
+                 self.texels[frameNo, (intensities<100), :] = [0, 0, 0, 0]
+                 # ====== END SOLUTION ======
 
              elif flag == 3:
-                 ''' TODO: transfer function 3 '''
-
-
+                 # ====== TEETH =====
+                 # Attempted to isolate the brain but never managed to get rid of the skin
+                 intensities = self.intensity_stack[frameNo,:,:]
+                 self.texels[frameNo, (intensities>=218), :] = [255, 255, 255, 255]
+                 self.texels[frameNo, (intensities<218), :] = [0, 0, 0, 0]
+                 # ====== END SOLUTION ======
 
          # reload texture
          self.build_texture()
-
 
     def draw_scene(self):
         glPushMatrix()
@@ -161,28 +153,20 @@ class VolumeRendering(Model):
 
         # draw bounding box as a white cube
         glPushMatrix()
-
         glutWireCube(1.0)
-
         glPopMatrix()
 
         self.draw_volume()
 
-
     def draw_volume(self):
-
-        ''' TODO: have the quads (slices) face the viewer '''
-
+        # NOT IMPLEMENTED.
+        # TODO: have the quads (slices) face the viewer
         glEnable(GL_BLEND)
         # glBlendFunc can be set during init but it's set here just to have all relevant things in one place
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-
         glEnable(GL_TEXTURE_3D)
 
-        '''
-        Draw all the NUMSLICES quads with corresponding texture coordinates.
-        '''
+        # Draw all the NUMSLICES quads with corresponding texture coordinates.
 
         # the z-coordinate represents the depth of each slice in the bounding box
         for z in np.linspace(-0.5, 0.5, self.NUMSLICES):
@@ -196,9 +180,7 @@ class VolumeRendering(Model):
                 glVertex3f(quad_coord[0][i], quad_coord[1][i], z)
             glEnd()
 
-
         glDisable(GL_TEXTURE_3D)
-
         glDisable(GL_BLEND)
 
     def keyboard(self, key, x, y):
